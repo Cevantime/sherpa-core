@@ -5,13 +5,13 @@
     "require": {
         "php": ">=7.1",
         "psr/http-message": "~1.0",
+        "psr/http-server-middleware": "~1.0",
         "psr/http-server-handler": "~1.0",
         "symfony/event-dispatcher": "^4.0",
+        "zendframework/zend-diactoros": "~1.0",
         "php-di/php-di": "^6.0"
     },
     "require-dev": {
-        "zendframework/zend-diactoros": "~1.0",
-        "psr/http-server-middleware": "~1.0",
         "phpunit/phpunit": "~7.0"
     },
     "authors": [
