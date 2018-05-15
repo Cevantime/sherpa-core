@@ -1,6 +1,6 @@
 {
-    "name": "foo/bar",
-    "description": "My new project",
+    "name": "cevantime/sherpa-core",
+    "description": "Sherpa Core",
     "require": {
         "php": ">=7.1",
         "psr/http-message": "~1.0",
