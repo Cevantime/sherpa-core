@@ -1,6 +1,7 @@
 {
     "name": "cevantime/sherpa-core",
     "description": "Sherpa Core",
+    "license": "MIT",
     "require": {
         "php": ">=7.1",
         "psr/http-message": "~1.0",
