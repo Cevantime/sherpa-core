@@ -48,6 +48,10 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
      */
     protected $originalRequest;
     
+    /**
+     *
+     * @var ContainerBuilder 
+     */
     protected $containerBuilder;
     protected $container;
     protected $storage;
@@ -125,6 +129,9 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
     {
         if (!$this->booted) {
             $this->originalRequest = $request;
+            $this->containerBuilder->addDefinitions([
+                'original_request' => $request
+            ]);
             $this->boot();
         }
         return $this->run($request);
