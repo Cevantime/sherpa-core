@@ -3,16 +3,16 @@
 namespace Sherpa\Kernel;
 
 use DI\ContainerBuilder;
-use Sherpa\Exception\NotAMiddleWareException;
-use Sherpa\Kernel\Event\Events;
-use Sherpa\Kernel\Middleware\CallableMiddleware;
-use Sherpa\Kernel\Middleware\MiddlewareGroup;
-use Sherpa\Kernel\RequestHandler\RequestHandler;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\MiddlewareInterface;
 use Psr\Http\Server\RequestHandlerInterface;
+use Sherpa\Exception\NotAMiddleWareException;
+use Sherpa\Kernel\Event\Events;
+use Sherpa\Kernel\Middleware\CallableMiddleware;
+use Sherpa\Kernel\Middleware\MiddlewareGroup;
+use Sherpa\Kernel\RequestHandler\RequestHandler;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Zend\Diactoros\ServerRequest;
 
@@ -26,7 +26,7 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
 
     /**
      *
-     * @var MiddlewareGroup[]
+     * @var MiddlewareGroup
      */
     protected $middlewareGroup;
 
@@ -68,11 +68,21 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
         ];
     }
 
-    public function add($callable = null, $priority = 0)
+    /**
+     * add a middleware, with optionnal priority. 
+     * If a class is given as third argument, the middleware will be added <i>after</i> 
+     * the middleware that has this class.
+     
+     * @param callable|MiddlewareInterface $callable
+     * @param int $priority
+     * @param string $after
+     * @param string $before
+     */
+    public function add($callable, int $priority = 0, string $before = null)
     {
         $middleware = $this->toMiddleWare($callable);
 
-        $this->getMiddlewareGroup()->addMiddleware($middleware, $priority);
+        $this->getMiddlewareGroup()->addMiddleware($middleware, $priority, $before);
     }
 
     public function createMiddlewareChain($max = 2147483647, $min = -2147483648)
@@ -169,6 +179,11 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
     protected function getMiddlewareGroup()
     {
         return $this->middlewareGroup;
+    }
+    
+    public function getMiddlewares(int $min = -2147483647, int $max = 2147483647)
+    {
+        return $this->getMiddlewareGroup()->getMiddlewares($max, $min);
     }
 
     public function delayed($callable)

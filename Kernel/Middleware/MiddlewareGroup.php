@@ -19,19 +19,23 @@ class MiddlewareGroup implements MiddlewareGroupInterface
      */
     protected $middlewareGroups = array();
 
-    /**
-     *
-     * @var Kernel
-     */
-    protected $kernel;
-
-    public function __construct(Kernel $kernel)
+    public function addMiddleware(MiddlewareInterface $middleware, int $priority = 0, string $before = null)
     {
-        $this->kernel = $kernel;
-    }
+        if ($before === null) {
+            $this->middlewareGroups[$priority][] = $middleware;
+            return;
+        }
 
-    public function addMiddleware(MiddlewareInterface $middleware, int $priority = 0)
-    {
+        $this->middlewareGroups[$priority] = $this->middlewareGroups[$priority] ?? [];
+
+        foreach ($this->middlewareGroups[$priority] as $key => $m) {
+            if (get_class($m) === $before) {
+                $this->middlewareGroups[$priority][$key] = $middleware;
+                $this->middlewareGroups[$priority][++$key] = $m;
+                return;
+            }
+        }
+
         $this->middlewareGroups[$priority][] = $middleware;
     }
 
@@ -41,7 +45,7 @@ class MiddlewareGroup implements MiddlewareGroupInterface
         return $this->middlewareGroups;
     }
 
-    public function getMiddlewares($max = 2147483647, $min = -2147483648)
+    public function getMiddlewares(int $max = 2147483647, int $min = -2147483648)
     {
         $middlewares = [];
         foreach ($this->getMiddlewareGroups() as $key => $middlewareGroup) {

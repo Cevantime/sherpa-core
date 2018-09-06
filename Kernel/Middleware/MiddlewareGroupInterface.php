@@ -20,6 +20,6 @@ interface MiddlewareGroupInterface
     /**
      * @return MiddlewareInterface[]
      */
-    public function getMiddlewares($min = -2147483648, $max = 2147483647);
+    public function getMiddlewares(int $min = -2147483648, int $max = 2147483647);
     
 }
