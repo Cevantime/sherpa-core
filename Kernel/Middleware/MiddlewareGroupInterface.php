@@ -15,7 +15,7 @@ interface MiddlewareGroupInterface
      * @param MiddlewareInterface $callable
      * @param int $priority
      */
-    public function addMiddleware(MiddlewareInterface $callable, int $priority = 10);
+    public function addMiddleware($callable, int $priority = 10);
     
     /**
      * @return MiddlewareInterface[]

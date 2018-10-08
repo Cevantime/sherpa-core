@@ -13,7 +13,7 @@ namespace Sherpa\Exception;
  *
  * @author cevantime
  */
-class NotAMiddleWareException extends \Exception
+class NotAMiddlewareException extends \Exception
 {
     public function __construct($var, int $code = 0, \Throwable $previous = null)
     {
