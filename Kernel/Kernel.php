@@ -15,6 +15,7 @@ use Sherpa\Kernel\Middleware\MiddlewareGroup;
 use Sherpa\Kernel\RequestHandler\RequestHandler;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Zend\Diactoros\ServerRequest;
+use Zend\Diactoros\ServerRequestFactory;
 
 /**
  * Description of HttpKernel
@@ -41,13 +42,13 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
      * @var callable[]
      */
     protected $delayed;
-    
+
     /**
      *
      * @var ServerRequest
      */
     protected $originalRequest;
-    
+
     /**
      *
      * @var ContainerBuilder 
@@ -55,7 +56,6 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
     protected $containerBuilder;
     protected $container;
     protected $storage;
-    
     protected $booted = false;
 
     public function __construct()
@@ -66,19 +66,20 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
         $this->storage = [
             'container.builder' => $this->containerBuilder,
         ];
+        $this->delayed = [];
     }
 
     /**
      * add a middleware, with optionnal priority. 
      * If a class is given as third argument, the middleware will be added <i>after</i> 
      * the middleware that has this class.
-     
+
      * @param callable|MiddlewareInterface $callable
      * @param int $priority
      * @param string $after
      * @param string $before
      */
-    public function add($callable, int $priority = 0, string $before = null)
+    public function add($callable, int $priority = 1, string $before = null)
     {
         $middleware = $this->toMiddleWare($callable);
 
@@ -138,13 +139,18 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
         if (!$this->booted) {
-            $this->originalRequest = $request;
-            $this->containerBuilder->addDefinitions([
-                'original_request' => $request
-            ]);
+            $this->setOriginalRequest($request);
             $this->boot();
         }
         return $this->run($request);
+    }
+
+    public function setOriginalRequest(ServerRequestInterface $request)
+    {
+        $this->originalRequest = $request;
+        $this->containerBuilder->addDefinitions([
+            'original_request' => $request
+        ]);
     }
 
     public function run($request, $max = 2147483647, $min = -2147483648)
@@ -153,8 +159,11 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
         return (new RequestHandler($middlewares))->handle($request);
     }
 
-    protected function boot()
+    public function boot()
     {
+        if($this->originalRequest === null) {
+            $this->setOriginalRequest(ServerRequestFactory::fromGlobals());
+        }
         $this->container = $this->getContainerBuilder()->build();
         $this->storage = null;
         foreach ($this->delayed as $delayed) {
@@ -180,7 +189,7 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
     {
         return $this->middlewareGroup;
     }
-    
+
     public function getMiddlewares(int $min = -2147483647, int $max = 2147483647)
     {
         return $this->getMiddlewareGroup()->getMiddlewares($max, $min);
@@ -190,12 +199,16 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
     {
         $this->delayed[] = $callable;
     }
-    
+
     function getOriginalRequest(): ServerRequest
     {
         return $this->originalRequest;
     }
 
+    /**
+     * 
+     * @return \DI\Container
+     */
     public function getContainer()
     {
         return $this->container;
@@ -205,7 +218,7 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
     {
         return $this->containerBuilder;
     }
-    
+
     public function set($id, $value)
     {
         if ($this->container) {
