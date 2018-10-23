@@ -10,5 +10,4 @@ namespace Sherpa\Kernel\Event;
 class Events
 {
     const TERMINATE = 'event.terminate';
-    const FINISH_REQUEST = 'event.finish_request';
 }

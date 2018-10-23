@@ -14,6 +14,7 @@ use Sherpa\Kernel\Middleware\CallableMiddleware;
 use Sherpa\Kernel\Middleware\MiddlewareGroup;
 use Sherpa\Kernel\RequestHandler\RequestHandler;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Zend\Diactoros\ServerRequest;
 use Zend\Diactoros\ServerRequestFactory;
 
@@ -33,7 +34,7 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
 
     /**
      *
-     * @var EventDispatcher
+     * @var EventDispatcherInterface
      */
     protected $dispatcher;
 
@@ -66,13 +67,14 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
 
     public function __construct()
     {
-        $this->dispatcher = new EventDispatcher();
         $this->middlewareGroup = new MiddlewareGroup();
         $this->containerBuilder = new ContainerBuilder();
         $this->storage = [
             'container.builder' => $this->containerBuilder,
         ];
         $this->delayed = [];
+        $this->dispatcher = new EventDispatcher();
+        $this->set(EventDispatcherInterface::class, $this->dispatcher);
     }
 
     /**
@@ -109,11 +111,6 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
     public function on($eventName, $listener)
     {
         $this->addListener($eventName, $listener);
-    }
-
-    public function onFinish($listener)
-    {
-        $this->on(Events::FINISH_REQUEST, $listener);
     }
 
     public function onTerminate($listener)
@@ -191,9 +188,7 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
 
     public function terminate()
     {
-        // TODO : do it properly ! ie in the right callback in order for it to run after the response is sent
-        $this->dispatcher->dispatch(Events::FINISH_REQUEST);
-        $this->dispatcher->dispatch(Events::TERMINATE);
+        $this->dispatch(Events::TERMINATE);
     }
 
     protected function getMiddlewareGroup()
@@ -218,7 +213,7 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
 
     /**
      *
-     * @return \DI\Container
+     * @return ContainerInterface
      */
     public function getContainer()
     {
