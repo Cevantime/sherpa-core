@@ -89,26 +89,23 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
      * add a middleware, with optionnal priority.
      * If a class is given as third argument, the middleware will be added <i>after</i>
      * the middleware that has this class.
-     * @param callable|MiddlewareInterface $callable
+     * @param mixed $middleware
      * @param int $priority
      * @param string $after
      * @param string $before
      */
-    public function pipe($callable, int $priority = 1, string $before = null)
+    public function pipe($middleware, int $priority = 1, string $before = null)
     {
-        if(is_object($callable)) {
-            $class = get_class($callable);
-        } else if(is_string($callable) && class_exists($callable)) {
-            $class = $callable;
+        if(is_object($middleware)) {
+            $class = get_class($middleware);
+        } else if(is_string($middleware) && class_exists($middleware)) {
+            $class = $middleware;
         }
-        if(isset($class) && isset($this->middlewareClasses[$class])) {
-            if(isset($this->middlewareClasses[$class])) {
-                return;
-            }
-            $this->middlewareClasses[$class] = $callable;
+        if(isset($class) && ! isset($this->middlewareClasses[$class])) {
+            $this->middlewareClasses[$class] = $middleware;
         }
 
-        $this->getMiddlewareGroup()->addMiddleware($callable, $priority, $before);
+        $this->getMiddlewareGroup()->addMiddleware($middleware, $priority, $before);
     }
 
     public function createMiddlewareStack($max = 2147483647, $min = -2147483648)

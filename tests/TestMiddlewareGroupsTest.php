@@ -53,11 +53,11 @@ class TestMiddlewareGroupsTest extends Unit
         
     }
 
-    public function testMiddlewareIsAdded()
+    public function testMiddlewareIspipeed()
     {
         $middleWareSampleA = new MiddleWareSampleA();
         
-        $this->kernel->add($middleWareSampleA);
+        $this->kernel->pipe($middleWareSampleA);
         
         $this->assertContains($middleWareSampleA, $this->kernel->getMiddlewares());
     }
@@ -67,8 +67,8 @@ class TestMiddlewareGroupsTest extends Unit
         $middleWareSampleA = new MiddleWareSampleA();
         $middleWareSampleB = new MiddleWareSampleB();
         
-        $this->kernel->add($middleWareSampleA);
-        $this->kernel->add($middleWareSampleB);
+        $this->kernel->pipe($middleWareSampleA);
+        $this->kernel->pipe($middleWareSampleB);
         
         $middlewares = $this->kernel->getMiddlewares();
         
@@ -82,8 +82,8 @@ class TestMiddlewareGroupsTest extends Unit
         $middleWareSampleA = new MiddleWareSampleA();
         $middleWareSampleB = new MiddleWareSampleB();
         
-        $this->kernel->add($middleWareSampleA, 1);
-        $this->kernel->add($middleWareSampleB, 2);
+        $this->kernel->pipe($middleWareSampleA, 1);
+        $this->kernel->pipe($middleWareSampleB, 2);
         
         $subset = $this->kernel->getMiddlewares(1,2);
         
@@ -101,9 +101,9 @@ class TestMiddlewareGroupsTest extends Unit
         $middleWareSampleB = new MiddleWareSampleB();
         $middleWareSampleC = new MiddleWareSampleC();
         
-        $this->kernel->add($middleWareSampleA);
-        $this->kernel->add($middleWareSampleC);
-        $this->kernel->add($middleWareSampleB, 0, MiddleWareSampleC::class);
+        $this->kernel->pipe($middleWareSampleA);
+        $this->kernel->pipe($middleWareSampleC);
+        $this->kernel->pipe($middleWareSampleB, 1, MiddleWareSampleC::class);
         
         $this->assertArraySubset([$middleWareSampleA, $middleWareSampleB, $middleWareSampleC], $this->kernel->getMiddlewares());
         
