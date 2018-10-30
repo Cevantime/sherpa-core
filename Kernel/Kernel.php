@@ -12,6 +12,7 @@ use Sherpa\Exception\NotAMiddlewareException;
 use Sherpa\Kernel\Event\Events;
 use Sherpa\Kernel\Middleware\CallableMiddleware;
 use Sherpa\Kernel\Middleware\MiddlewareGroup;
+use Sherpa\Kernel\Request\RequestStack;
 use Sherpa\Kernel\RequestHandler\RequestHandler;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -55,6 +56,11 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
      * @var ContainerBuilder
      */
     protected $containerBuilder;
+
+    /**
+     * @var RequestStack
+     */
+    protected $requestStack;
     /**
      * @var ContainerInterface
      */
@@ -74,7 +80,9 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
         ];
         $this->delayed = [];
         $this->dispatcher = new EventDispatcher();
+        $this->requestStack = new RequestStack();
         $this->set(EventDispatcherInterface::class, $this->dispatcher);
+        $this->set(RequestStack::class, $this->requestStack);
     }
 
     /**
@@ -158,14 +166,12 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
     public function run($request, $max = 2147483647, $min = -2147483648)
     {
         $middlewares = $this->createMiddlewareStack($max, $min);
-        foreach ($middlewares as $key => $middleware){
-            if(is_string($middleware) && ! is_callable($middleware) && $this->container->has($middleware)){
-                $middlewares[$key] = $this->container->get($middleware);
-            }
-        }
         $handler = new RequestHandler($middlewares, $this->getContainer());
         $this->set('current_handler', $handler);
-        return $handler->handle($request);
+        $this->requestStack->push($request);
+        $response = $handler->handle($request);
+        $this->requestStack->pop();
+        return $response;
     }
 
     public function boot()

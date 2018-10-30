@@ -29,7 +29,8 @@ class MiddlewareGroup implements MiddlewareGroupInterface
         $this->middlewareSubGroups[$priority] = $this->middlewareSubGroups[$priority] ?? [];
 
         foreach ($this->middlewareSubGroups[$priority] as $key => $m) {
-            if (get_class($m) === $before) {
+            $classname = is_string($m) ? $m : get_class($m);
+            if ($classname === $before) {
                 $this->middlewareSubGroups[$priority][$key] = $middleware;
                 $this->middlewareSubGroups[$priority][++$key] = $m;
                 return;

@@ -8,6 +8,7 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Sherpa\Exception\NotAMiddlewareException;
+use Sherpa\Kernel\Middleware\CallableMiddleware;
 
 /**
  * Description of RequestHandler
@@ -43,7 +44,7 @@ class RequestHandler implements RequestHandlerInterface
         }
 
         if (is_string($callable) && class_exists($callable)) {
-            return $callable;
+            return $this->container->get($callable);
         }
 
         if (!($callable instanceof MiddlewareInterface)) {

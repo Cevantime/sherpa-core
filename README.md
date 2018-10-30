@@ -1,14 +1,14 @@
 
 # Sherpa Core
 
-A basic core class to simply build psr compliant applications. The code is intentionnally minimal. For a more integrated experience, you can use [Sherpa Framework](https://github.com/Cevantime/sherpa-framework).
+A basic core class to build psr compliant applicationswith ease. The code is intentionnally minimal. For a more integrated experience, see [Sherpa Framework](https://github.com/Cevantime/sherpa-framework).
 
 ## Installation
 
 Sherpa Core is installable via composer
 
 ```bash
-composer require cevantime/sherpa @dev
+composer require cevantime/sherpa
 ```
 
 ## Getting Started
@@ -46,18 +46,19 @@ $response = $app->handle($request);
 ```
 
 
-When the response is ready, it needs to be emitted !  You can use a SapiEmitter for example
+When the response is ready, it needs to be emitted ! 
 
 ```php
 use Zend\Diactoros\Response\SapiEmitter;
 // ...
-(new SapiEmitter)->emit($response);
+(new SapiEmitter())->emit($response);
 ```
-Now visit your index file. You should see "Hello Sherpa !"
+That's it ! Now visit your index file. You should see "Hello Sherpa !"
+
 
 ## Middlewares
 
-Sherpa Core do his best to be compliant with psr7 and psr-15 recommandations. Those recommendations introduce the usage of **Message Interface** and **Middlewares**.
+Sherpa Core do his best to be compliant with psr7 and psr-15 recommandations. Those recommendations introduces the usage of **Message Interface** and **Middlewares**.
 Piping middlewares in the Kernel is pretty simple : 
 ```php
 use Psr\Http\Message\ServerRequestInterface;
@@ -71,7 +72,7 @@ Accordingly to the specifications, middlewares must return an instance of `Psr\H
  - Delegating the Response creation to the next middleware by calling `$handler->handle($request)` and eventually modify the response.
  - Generate his own Response and bypass the next Middlewares.
 
-Here is a (imaginary) example :
+Here is a (imaginary) examplen that check if we are visiting an admin uri and prevent user that are not admin to enter !
 
 ```php
 $kernel->pipe(function(ServerRequestInterface $request, RequestHandlerInterface $handler) {
@@ -80,11 +81,16 @@ $kernel->pipe(function(ServerRequestInterface $request, RequestHandlerInterface 
 		&& ! $request->getAttribute('user')->isAdmin()) {
 		// if not, send an error
 		return (new Response('php://memory'))
-			->withStatus(403, 'You are not allowed to stay here !';
+			->withStatus(403, 'You are not allowed to enter !';
 	}
 	// otherwise, let the process continue and the next middleware proceed
 	return $handler->handle($request);
 });
+```
+
+Optionnally (but it is worth noting it !) an integer can be provided as second param in order to set a priority for the middleware (higher comes before).
+```php
+$kernel->pipe(function(){ return new Response(...); }, 50);
 ```
 
 ## Container and Autowiring
@@ -130,7 +136,7 @@ class UserMiddleware implements MiddlewareInterface
 	/**
 	 * @param UserRepository $userRepository is auto-injected !
 	 * @param LoggerInterface $logger hase been configure to inject an instance of Logger
-	 */
+	 * /
 	public function __construct(UserRepository $userRepository, LoggerInterface $logger)
 	{
 		$this->userRepository = $userRepository;
@@ -153,3 +159,7 @@ The Kernel will use di container to inject the middleware in the middleware stac
 ```php
 $kernel->pipe(UserMiddleware::class);
 ```
+
+## Conclusion
+
+This kernel is fairly minimal but it is a good starting point to build great applications with full psr compliance. [Sherpa Framework](https://github.com/Cevantime/sherpa-framework) is an example of how this kernel can be used.
