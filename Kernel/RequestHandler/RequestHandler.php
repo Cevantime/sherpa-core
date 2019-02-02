@@ -9,6 +9,7 @@ use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface;
 use Sherpa\Exception\NotAMiddlewareException;
 use Sherpa\Kernel\Middleware\CallableMiddleware;
+use Sherpa\Kernel\Middleware\MiddlewareGroup;
 
 /**
  * Description of RequestHandler
@@ -17,23 +18,26 @@ use Sherpa\Kernel\Middleware\CallableMiddleware;
  */
 class RequestHandler implements RequestHandlerInterface
 {
-    private $middlewares;
+    /**
+     * @var MiddlewareGroup
+     */
+    private $middlewareGroup;
     private $container;
     
     public function __construct($middlewares, $container)
     {
-        $this->middlewares = $middlewares;
+        $this->middlewareGroup = $middlewares;
         $this->container = $container;
     }
     
     public function handle(ServerRequestInterface $request): ResponseInterface
     {
-        $middleware = current($this->middlewares);
+        $middleware = $this->middlewareGroup->currentMiddleware();
         if( ! $middleware) {
             throw new NoResponseException();
         }
-        next($this->middlewares);
         $middleware = $this->toMiddleWare($middleware);
+        $this->middlewareGroup->nextMiddleware();
         return $middleware->process($request, $this);
     }
 
@@ -55,10 +59,10 @@ class RequestHandler implements RequestHandlerInterface
     }
 
     /**
-     * @return mixed
+     * @return MiddlewareGroup
      */
-    public function getMiddlewares()
+    public function getMiddlewareGroup()
     {
-        return $this->middlewares;
+        return $this->middlewareGroup;
     }
 }

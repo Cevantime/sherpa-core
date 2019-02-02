@@ -10,19 +10,27 @@ use Psr\Http\Server\MiddlewareInterface;
  *
  * @author cevantime
  */
-class MiddlewareGroup implements MiddlewareGroupInterface
+class MiddlewareGroup
 {
 
     /**
      *
      * @var calllable[]
      */
-    protected $middlewareSubGroups = array();
+    protected $middlewareSubGroups;
+    protected $currentGroup;
 
-    public function addMiddleware($middleware, int $priority = 0, string $before = null)
+    public function __construct($middlewareSubGroups = [])
+    {
+        $this->middlewareSubGroups = $middlewareSubGroups;
+        $this->currentGroup = current($middlewareSubGroups);
+    }
+
+    public function addMiddleware($middleware, ?int $priority = 1, ?string $before = null)
     {
         if ($before === null) {
             $this->middlewareSubGroups[$priority][] = $middleware;
+            $this->currentGroup = current($this->middlewareSubGroups);
             return;
         }
 
@@ -33,11 +41,13 @@ class MiddlewareGroup implements MiddlewareGroupInterface
             if ($classname === $before) {
                 $this->middlewareSubGroups[$priority][$key] = $middleware;
                 $this->middlewareSubGroups[$priority][++$key] = $m;
+                $this->currentGroup = current($this->middlewareSubGroups);
                 return;
             }
         }
 
         $this->middlewareSubGroups[$priority][] = $middleware;
+        $this->currentGroup = current($this->middlewareSubGroups);
     }
 
     public function getMiddlewareSubGroups()
@@ -46,17 +56,32 @@ class MiddlewareGroup implements MiddlewareGroupInterface
         return $this->middlewareSubGroups;
     }
 
-    public function getMiddlewares(int $max = 2147483647, int $min = -2147483648)
+    public function getMiddlewareGroups(int $max = 2147483647, int $min = -2147483648)
     {
-        $middlewares = [];
+        $middlewareGroups = [];
         foreach ($this->getMiddlewareSubGroups() as $key => $middlewareGroup) {
             if ($key >= $min && $key <= $max) {
-                foreach ($middlewareGroup as $middleware) {
-                    $middlewares[] = $middleware;
-                }
+                $middlewareGroups[$key] = $middlewareGroup;
             }
         }
-        return $middlewares;
+        return $middlewareGroups;
+    }
+
+    public function currentMiddleware()
+    {
+        if($this->currentGroup) {
+            return current($this->currentGroup);
+        }
+        return false;
+    }
+
+    public function nextMiddleware()
+    {
+        if( ! next($this->currentGroup)) {
+            $this->currentGroup = next($this->middlewareSubGroups);
+
+        }
+        return $this->currentMiddleware();
     }
 
 }

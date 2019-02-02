@@ -94,7 +94,7 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
      * @param string $after
      * @param string $before
      */
-    public function pipe($middleware, int $priority = 1, string $before = null)
+    public function pipe($middleware, ?int $priority = 1, ?string $before = null)
     {
         if(is_object($middleware)) {
             $class = get_class($middleware);
@@ -108,9 +108,9 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
         $this->getMiddlewareGroup()->addMiddleware($middleware, $priority, $before);
     }
 
-    public function createMiddlewareStack($max = 2147483647, $min = -2147483648)
+    public function createMiddlewareGroup($max = 2147483647, $min = -2147483648)
     {
-        return $this->getMiddlewareGroup()->getMiddlewares($max, $min);
+        return new MiddlewareGroup($this->getMiddlewareGroup()->getMiddlewareGroups($max, $min));
     }
 
     public function on($eventName, $listener)
@@ -162,7 +162,7 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
 
     public function run($request, $max = 2147483647, $min = -2147483648)
     {
-        $middlewares = $this->createMiddlewareStack($max, $min);
+        $middlewares = $this->createMiddlewareGroup($max, $min);
         $handler = new RequestHandler($middlewares, $this->getContainer());
         $this->set('current_handler', $handler);
         $this->requestStack->push($request);
@@ -201,7 +201,7 @@ class Kernel implements RequestHandlerInterface, ContainerInterface
 
     public function getMiddlewares(int $min = -2147483647, int $max = 2147483647)
     {
-        return $this->getMiddlewareGroup()->getMiddlewares($max, $min);
+        return $this->getMiddlewareGroup()->getMiddlewareGroups($max, $min);
     }
 
     public function delayed($callable)
